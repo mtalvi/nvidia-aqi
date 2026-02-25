@@ -397,6 +397,8 @@ export interface ChatState {
   currentStatus: StatusType | null
   /** Pending interaction requiring user response (for HITL) */
   pendingInteraction: PendingInteraction | null
+  /** Transient callback for responding to HITL interactions (registered by InputArea, not persisted) */
+  respondToInteractionFn: ((response: string) => void) | null
 
   // Deep research SSE state
   /** Current deep research job ID (null when not active) */
@@ -528,6 +530,8 @@ export interface ChatActions {
   setPendingInteraction: (interaction: PendingInteraction | null) => void
   /** Clear pending interaction (after user responds) */
   clearPendingInteraction: () => void
+  /** Register the respondToInteraction callback (called by InputArea on mount) */
+  setRespondToInteractionFn: (fn: ((response: string) => void) | null) => void
 
   // Actions for file and error cards
 

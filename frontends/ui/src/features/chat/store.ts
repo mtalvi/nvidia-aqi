@@ -193,6 +193,7 @@ const initialState: ChatState = {
   currentStatus: null,
   // State for HITL (human-in-the-loop)
   pendingInteraction: null,
+  respondToInteractionFn: null,
   // State for deep research SSE streaming
   deepResearchJobId: null,
   deepResearchLastEventId: null,
@@ -1406,6 +1407,10 @@ export const useChatStore = create<ChatStore>()(
 
         clearPendingInteraction: () => {
           set({ pendingInteraction: null }, false, 'clearPendingInteraction')
+        },
+
+        setRespondToInteractionFn: (fn) => {
+          set({ respondToInteractionFn: fn }, false, 'setRespondToInteractionFn')
         },
 
         // ============================================================
