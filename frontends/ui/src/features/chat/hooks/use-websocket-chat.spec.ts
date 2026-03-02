@@ -421,6 +421,8 @@ describe('useWebSocketChat', () => {
     })
 
     vi.clearAllMocks()
+    // The hook now ignores stale final completions when the store is not streaming.
+    mockStoreState.isStreaming = true
 
     // Simulate final response
     act(() => {
