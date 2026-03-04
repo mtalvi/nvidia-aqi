@@ -11,20 +11,6 @@
     - Average Effective Citations: average # of valuable, verifiably supported information an agent retrieves and presents per task.
     - Citation Accuracy: measures the precision of an agent’s citations, reflecting its ability to ground statements with appropriate sources correctly.
 
-## Package
-
-This package provides two NeMo Agent toolkit evaluators for evaluating deep research agents with PhD-level research tasks:
-
-- **RACE** (Reference-based Adaptive Criteria-driven Evaluation): Evaluates report generation quality
-- **FACT** (Framework for Factual Abundance and Citation Trustworthiness): Evaluates citation accuracy
-
-## Installation
-
-```bash
-uv pip install -e ./frontends/benchmarks/deepresearch_bench
-```
-
-
 ### API Keys
 
 ```bash
