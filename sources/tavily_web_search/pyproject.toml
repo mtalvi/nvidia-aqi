@@ -1,0 +1,26 @@
+
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools >= 64", "setuptools-scm>=8"]
+
+[tool.setuptools]
+packages = ["tavily_web_search"]
+package-dir = {"tavily_web_search" = "src"}
+
+
+[project]
+name = "tavily_web_search"
+version = "1.0.0"
+description = "NAT-based Tavily web search tool"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "nvidia-nat==1.4.0",
+    "httpx>=0.24.0",
+    "pydantic>=2.0.0",
+    "langchain-tavily>=0.1.0",
+]
+
+[project.entry-points."nat.plugins"]
+tavily_web_search = "tavily_web_search.register"

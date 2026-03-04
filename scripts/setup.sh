@@ -1,0 +1,89 @@
+#!/bin/bash
+# Setup script for AI-Q blueprint development environment
+
+set -euo pipefail
+
+echo "=== AI-Q Blueprint Development Setup ==="
+echo ""
+
+# Check if uv is installed
+if ! command -v uv &> /dev/null; then
+    echo "uv is not installed. Installing..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    echo "uv installed"
+else
+    echo "uv is already installed"
+fi
+
+# Resolve uv binary for non-interactive shells (e.g., Jupyter).
+# The installer may place uv in ~/.local/bin, which isn't always on PATH yet.
+UV_BIN="$(command -v uv || true)"
+if [ -z "${UV_BIN}" ] && [ -x "${HOME}/.local/bin/uv" ]; then
+    export PATH="${HOME}/.local/bin:${PATH}"
+    UV_BIN="${HOME}/.local/bin/uv"
+fi
+
+if [ -z "${UV_BIN}" ]; then
+    echo "Error: uv was not found after installation."
+    echo "Add uv to PATH (typically ${HOME}/.local/bin) and re-run setup."
+    exit 1
+fi
+
+# Create virtual environment
+echo ""
+echo "Creating virtual environment..."
+"${UV_BIN}" venv --python 3.13 --seed .venv
+echo "Virtual environment created"
+
+# Activate virtual environment
+echo ""
+echo "Activating virtual environment..."
+source .venv/bin/activate
+
+# Install core framework with dev dependencies
+echo ""
+echo "Installing core framework with dev dependencies..."
+"${UV_BIN}" pip install -e ".[dev]"
+echo "Core framework installed"
+
+# Install benchmarks
+echo ""
+echo "Installing benchmarks..."
+"${UV_BIN}" pip install -e ./frontends/benchmarks/deepresearch_bench
+echo "Benchmarks installed"
+
+# Install data sources
+echo ""
+echo "Installing data sources..."
+"${UV_BIN}" pip install -e ./sources/tavily_web_search
+"${UV_BIN}" pip install -e ./sources/google_scholar_paper_search
+"${UV_BIN}" pip install -e ./sources/ensemble_web_search
+"${UV_BIN}" pip install -e ./sources/you_com_web_search
+echo "Data Sources installed"
+
+# Setup pre-commit
+echo ""
+echo "Setting up pre-commit hooks..."
+pre-commit install
+echo "Pre-commit hooks installed"
+
+# Setup environment file
+echo ""
+if [ ! -f deploy/.env ]; then
+    echo "Creating .env file from template..."
+    cp deploy/.env.example deploy/.env
+    echo "Please edit deploy/.env and add your NVIDIA_API_KEY"
+else
+    echo ".env file already exists"
+fi
+
+echo ""
+echo "=== Setup Complete! ==="
+echo ""
+echo "Next steps:"
+echo "1. Activate virtual environment: source .venv/bin/activate"
+echo "2. Add your API keys to deploy/.env"
+echo "3. Evaluate the agent:"
+echo "   nat eval --config_file frontends/benchmarks/deepresearch_bench/configs/config_ensemble.yml"
+echo ""
+
