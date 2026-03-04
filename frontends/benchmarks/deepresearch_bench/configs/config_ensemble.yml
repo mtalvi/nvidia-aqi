@@ -1,4 +1,4 @@
-# Ensemble Deep Research Bench — Dual Pipeline (Tavily + You.com)
+# Ensemble Deep Research Bench — Dual Pipeline (Tavily)
 # Runs two independent deep_research_agent instances in parallel, merges their reports.
 # nat eval --config_file frontends/benchmarks/deepresearch_bench/configs/config_ensemble.yml
 
@@ -93,13 +93,13 @@ functions:
       - planner_agent_a
       - researcher_agent_a
 
-  # --- Pipeline B (You.com) ---
+  # --- Pipeline B (Tavily) ---
   planner_agent_b:
     _type: planner_agent
     llm: openai_gpt_5_2
     tools:
       - paper_search_tool
-      - you_com_search_tool
+      - advanced_web_search_tool
     timeout: 3600
 
   researcher_agent_b:
@@ -108,7 +108,7 @@ functions:
     rewriter_llm: nemotron_rl
     tools:
       - paper_search_tool
-      - you_com_search_tool
+      - advanced_web_search_tool
     timeout: 7200
 
   deep_research_agent_b:

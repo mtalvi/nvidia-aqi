@@ -133,45 +133,6 @@ evaluators:
 | Total Citations | Number of URLs cited |
 | Valid Citations | Number of verified citations |
 
-
-## Multi-run evaluation scripts
-
-For more reliable evaluation results, you can run multiple evaluations and aggregate the scores. Two scripts are provided for this purpose:
-
-### `scripts/run_drb_multi_eval_seq.sh`
-
-Runs DRB evaluation 3 times sequentially:
-
-- Saves each run to `eval/drb_results_run1/`, `eval/drb_results_run2/`, `eval/drb_results_run3/`
-- Automatically runs aggregation after all runs complete
-- You will need to update the local repo path, environment variables, and venv/conda configuration for executing `nat eval`
-
-### `scripts/aggregate_drb_scores.py`
-
-Aggregates scores from multiple evaluation runs:
-
-- Loads `race_output.json` from each run folder
-- Filters out failed runs (score < 5)
-- Calculates per-question mean and standard deviation scores
-- Extracts fine-grained metrics (comprehensiveness, insight, instruction_following, readability)
-- Outputs final aggregated metrics to `eval/drb_aggregated_results.json`
-
-### Usage
-
-Run everything (3 runs + aggregation):
-
-```bash
-./scripts/run_drb_multi_eval.sh
-```
-
-Run aggregation only (on existing results):
-
-```bash
-python scripts/aggregate_drb_scores.py \
-    --input-pattern "eval/drb_results_run*/race_output.json" \
-    --output "eval/drb_aggregated_results.json"
-```
-
 ## W&B Tracking
 
 Evaluation runs are tracked using [Weights & Biases Weave - deep-researcher-v2 project](https://wandb.ai/nvidia-aiq/deep-researcher-v2/weave) for experiment tracking and observability.
