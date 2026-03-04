@@ -1,0 +1,77 @@
+# DeepResearchBench_2: Run deep research workflow only (no evaluation).
+# Dataset: tasks_and_rubrics.jsonl (prompt = question). NAT writes workflow_output.json to output_dir;
+# per-item files (output_dir/items/<idx>.json or .md) are produced by scripts/split_workflow_output_to_per_item.py after the run.
+# Run: ./scripts/run_workflow_save_per_item.sh [--test] [--output-dir REL_PATH]
+
+general:
+  telemetry:
+    logging:
+      console:
+        _type: console
+        level: INFO
+    tracing:
+      phoenix:
+        _type: phoenix
+        endpoint: http://localhost:6006/v1/traces
+        project: DRB2
+  use_uvloop: true
+
+llms:
+  nemotron_rl:
+    _type: openai
+    model_name: "nemotron-super" # Replace with the actual model name
+    base_url: "https://localhost:8000/v1"
+    temperature: 0.7
+    top_p: 0.7
+    max_tokens: 256000
+    num_retries: 5
+    extra_body:
+      chat_template_kwargs:
+        enable_thinking: true
+
+  claude_46_opus:
+    _type: openai
+    model_name: "claude-opus-4-6" # Replace with the actual model name
+    base_url: "https://api.anthropic.com/v1/"
+    api_key: ${ANTHROPIC_API_KEY}
+    temperature: 1.0
+    max_retries: 10
+
+functions:
+  paper_search_tool:
+    _type: paper_search
+    max_results: 5
+    serper_api_key: ${SERPER_API_KEY}
+
+  advanced_web_search_tool:
+    _type: tavily_web_search
+    max_results: 2
+    advanced_search: true
+
+  deep_research_agent:
+    _type: deep_research_agent
+    researcher_llm: nemotron_rl
+    planner_llm: claude_46_opus
+    orchestrator_llm: claude_46_opus
+    max_loops: 2
+    tools:
+      - paper_search_tool
+      - advanced_web_search_tool
+
+workflow:
+  _type: deep_research_workflow
+
+eval:
+  general:
+    workflow_alias: "aiq-deepresearcher"
+    output_dir: frontends/benchmarks/deepresearch_bench_II/results/run_1
+    max_concurrency: 4
+    dataset:
+      _type: jsonl
+      file_path: frontends/benchmarks/deepresearch_bench2/data/tasks_and_rubrics.jsonl
+      structure:
+        question_key: prompt
+        answer_key: content
+        generated_answer_key: generated_answer
+    
+  evaluators: {}

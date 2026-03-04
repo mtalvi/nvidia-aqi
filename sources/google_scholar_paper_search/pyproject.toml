@@ -1,0 +1,25 @@
+
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools >= 64", "setuptools-scm>=8"]
+
+[tool.setuptools]
+packages = ["google_scholar_paper_search"]
+package-dir = {"google_scholar_paper_search" = "src"}
+
+
+[project]
+name = "google_scholar_paper_search"
+version = "1.0.0"
+description = "NAT-based Google Scholar paper search tool using Serper (Google Scholar)"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "nvidia-nat==1.4.0",
+    "httpx>=0.24.0",
+    "pydantic>=2.0.0",
+]
+
+[project.entry-points."nat.plugins"]
+paper_search = "google_scholar_paper_search.register"
