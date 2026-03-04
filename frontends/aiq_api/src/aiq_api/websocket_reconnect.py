@@ -208,9 +208,10 @@ class ReconnectableWebSocketMessageHandler(WebSocketMessageHandler):
         """Process user messages and register sockets for reconnect."""
         await _registry.set_socket(user_message_as_validated_type.conversation_id, self._socket)
         await super().process_workflow_request(user_message_as_validated_type)
-        # NAT's parent creates the task via asyncio.create_task and stores it
-        # in self._running_workflow_task. Track it in the registry so a
-        # reconnected handler can cancel a stale workflow for this conversation.
+        # TODO(NAT-upstream): _running_workflow_task is currently always None
+        # because NAT's message_handler.py assigns via method chaining:
+        #   self._running_workflow_task = asyncio.create_task(...).add_done_callback(cb)
+        # add_done_callback() returns None. Blocked on NeMo-Agent-Toolkit#1744.
         task = self._running_workflow_task
         if task is not None and not task.done():
             await _registry.set_workflow_task(user_message_as_validated_type.conversation_id, task)
