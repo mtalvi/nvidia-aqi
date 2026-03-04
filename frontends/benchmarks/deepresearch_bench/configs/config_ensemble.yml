@@ -140,9 +140,3 @@ eval:
         question_key: question
         answer_key: expected_output
         generated_answer_key: generated_answer
-
-  # evaluators:  # Optional, we recommend running evaluation with the official Deep Research Bench repository
-  #   race:
-  #     _type: drb_race_evaluator
-  #     llm_name: gemini_pro
-  #     criteria_file: frontends/benchmarks/deepresearch_bench/data/criteria.jsonl

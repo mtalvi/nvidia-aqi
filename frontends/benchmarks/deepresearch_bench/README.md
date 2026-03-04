@@ -1,4 +1,4 @@
-# AIQ DRB Evaluator
+# Deep Research Bench Evaluation of NVIDIA AI-Q Blueprint
 
 [DeepResearch Bench](https://github.com/Ayanami0730/deep_research_bench/tree/main) is one of the most popular benchmarks for evaluating deep research agents. The benchmark was introduced in [DeepResearch Bench: A Comprehensive Benchmark for Deep Research Agent](https://arxiv.org/pdf/2506.11763). It contains 100 research  tasks (50 English, 50 Chinese) from 22 domains. It proposed 2 different evaluation metrics: RACE and FACT to assess the quality of the research reports.
 
@@ -81,57 +81,6 @@ Start server (separate terminal):
 source .venv/bin/activate
 phoenix serve
 ```
-
-## Evaluators
-
-### RACE Evaluator
-
-Compares generated reports against reference articles using **Gemini 2.5 Pro** as an LLM judge.
-
-**Configuration:**
-
-```yaml
-evaluators:
-  - _type: drb_race_evaluator
-    llm_name: gemini_judge
-    criteria_file: path/to/criteria.json  # Optional
-```
-
-**Dimensions:**
-
-| Dimension | Weight | Description |
-|-----------|--------|-------------|
-| Comprehensiveness | 30% | Coverage of topic |
-| Insight/Depth | 35% | Quality of analysis |
-| Instruction Following | 20% | Adherence to task requirements |
-| Readability | 15% | Writing quality |
-
-**Score:** 0-100 scale
-
-### FACT Evaluator
-
-Verifies citation accuracy using **Gemini 2.5 Flash**:
-
-1. Extract URLs from generated content
-2. Scrape cited webpages through Jina API
-3. Validate claims against source content
-
-**Configuration:**
-
-```yaml
-evaluators:
-  - _type: drb_fact_evaluator
-    llm_name: gemini_flash
-    jina_api_key: ${JINA_API_KEY}  # Optional, can use env var
-```
-
-**Metrics:**
-
-| Metric | Description |
-|--------|-------------|
-| Citation Accuracy | Percentage of valid citations |
-| Total Citations | Number of URLs cited |
-| Valid Citations | Number of verified citations |
 
 ## W&B Tracking
 

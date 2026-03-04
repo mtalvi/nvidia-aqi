@@ -162,7 +162,6 @@ dev = [
     "ruff~=0.12",
     "yapf>=0.40.0",
     "mypy>=1.5.0",
-    "dask[distributed]>=2024.1.0",
     # Workspace packages for testing
     "google-scholar-paper-search",
     "tavily-web-search",

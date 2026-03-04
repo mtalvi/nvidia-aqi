@@ -46,12 +46,6 @@ echo "Installing core framework with dev dependencies..."
 "${UV_BIN}" pip install -e ".[dev]"
 echo "Core framework installed"
 
-# Install benchmarks
-echo ""
-echo "Installing benchmarks..."
-"${UV_BIN}" pip install -e ./frontends/benchmarks/deepresearch_bench
-echo "Benchmarks installed"
-
 # Install data sources
 echo ""
 echo "Installing data sources..."
@@ -84,6 +78,6 @@ echo "Next steps:"
 echo "1. Activate virtual environment: source .venv/bin/activate"
 echo "2. Add your API keys to deploy/.env"
 echo "3. Evaluate the agent:"
-echo "   nat eval --config_file frontends/benchmarks/deepresearch_bench/configs/config_ensemble.yml"
+echo "   source deploy/.env && nat eval --config_file frontends/benchmarks/deepresearch_bench/configs/config_ensemble.yml"
 echo ""
 
