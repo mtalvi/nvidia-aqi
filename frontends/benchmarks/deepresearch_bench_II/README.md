@@ -7,7 +7,6 @@
 ```bash
 export TAVILY_API_KEY=your_key              # For web search
 export NVIDIA_API_KEY=your_key              # For agent execution (integrate.api.nvidia.com)
-export OPENAI_API_KEY=your_key              # For frontier model in config (optional)
 export ANTHROPIC_API_KEY=your_key              # For Gemini eval 
 ```
 
@@ -17,7 +16,7 @@ The following table lists the available configuration files:
 
 | Configuration file | Description |
 | --- | --- |
-| `frontends/benchmarks/deepresearch_bench/configs/config_workflow_only.yml` | Runs the DeepResearch Bench II evaluation with a combination of GPT-5.2 model and nemotron. |
+| `frontends/benchmarks/deepresearch_bench_II/configs/config_workflow_only.yml` | Runs the DeepResearch Bench II evaluation with a combination of Claude 4.6 Opus model and nemotron. |
 
 ## Running Evaluation
 

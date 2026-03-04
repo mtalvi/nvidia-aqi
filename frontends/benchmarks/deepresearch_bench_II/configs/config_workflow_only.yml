@@ -68,7 +68,7 @@ eval:
     max_concurrency: 4
     dataset:
       _type: jsonl
-      file_path: frontends/benchmarks/deepresearch_bench2/data/tasks_and_rubrics.jsonl
+      file_path: frontends/benchmarks/deepresearch_bench_II/data/tasks_and_rubrics.jsonl
       structure:
         question_key: prompt
         answer_key: content
