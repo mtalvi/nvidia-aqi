@@ -54,7 +54,7 @@ dotenv -f deploy/.env run nat eval --config_file frontends/benchmarks/deepresear
 python frontends/benchmarks/deepresearch_bench/scripts/export_drb_jsonl.py --input <path to your workflow_output.json> --output <path to the output file you want to create with .jsonl extension>
 ```
 
-## Step 4: Post Process Reports using an LLM (Claude Opus)
+### Step 4: Post Process Reports using an LLM (Claude Opus)
 ```bash
 python frontends/benchmarks/deepresearch_bench/scripts/rewrite_prompt.py --input <path to agent generated outputs from step 3> -c 5
 ```
