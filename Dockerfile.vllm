@@ -1,0 +1,57 @@
+ARG BASE_IMG=nvcr.io/nvidia/cuda
+ARG BASE_IMG_TAG=12.8.1-runtime-ubuntu24.04
+
+FROM ${BASE_IMG}:${BASE_IMG_TAG} AS base
+
+# Update the OS
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y build-essential curl &&  \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Tell uv not to write a download cache during install — keeps image lean
+ENV UV_NO_CACHE=1
+# Use copy link mode (avoids hardlink issues inside containers)
+ENV UV_LINK_MODE=copy
+
+# Create workspace and install packages
+# vllm must be installed first (separate step) before torch overrides;
+# keep each install as a separate layer so rebuilds only redo what changed.
+RUN mkdir -p /workspace && \
+    cd /workspace && \
+    uv venv -p 3.13 --seed .venv
+
+RUN cd /workspace && \
+    uv pip install vllm==0.17.1
+
+RUN cd /workspace && \
+    uv pip install \
+        --index-url https://download.pytorch.org/whl/cu128 \
+        --extra-index-url https://pypi.org/simple \
+        torch==2.10.0
+
+RUN cd /workspace && \
+    uv pip install \
+        flashinfer-python==0.6.4 \
+        flashinfer-cubin==0.6.4 \
+        'nvidia-cutlass-dsl>=4.4.0.dev1'
+
+# Set the working directory
+WORKDIR /workspace
+RUN curl -fL -o /workspace/super_v3_reasoning_parser.py \
+      https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16/raw/main/super_v3_reasoning_parser.py
+# Runtime-only env vars (model cache location)
+ENV XDG_CACHE_HOME=/workspace/.cache
+ENV HF_HOME=/workspace/.cache/huggingface
+RUN mkdir -p $XDG_CACHE_HOME $HF_HOME
+
+COPY startup.sh /workspace/startup.sh
+RUN chmod +x /workspace/startup.sh
+
+EXPOSE 8080
+
+CMD ["/workspace/startup.sh"]
