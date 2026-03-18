@@ -29,7 +29,7 @@
 
 services:
   aiq-agent:
-    image: ${BACKEND_IMAGE:-}
+    image: ${BACKEND_IMAGE:-nvcr.io/nvidia/blueprint/aiq-agent:2.0.0}
     build:
       context: ../..
       dockerfile: deploy/Dockerfile
@@ -70,7 +70,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ${FRONTEND_IMAGE:-aiq-blueprint-ui:local}
+    image: ${FRONTEND_IMAGE:-nvcr.io/nvidia/blueprint/aiq-frontend:2.0.0}
     build:
       context: ../../frontends/ui
       dockerfile: deploy/Dockerfile
