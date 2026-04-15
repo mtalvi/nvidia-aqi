@@ -1,5 +1,7 @@
 # OpenShift Overlay Guidelines
 
-1. We introduced an `openshift` flag in the pre-existing [`values.yaml`](helm-charts-k8s/aiq/values.yaml) file. This is the only non-additive change we made on top of the NVIDIA upstream codebase.
-2. All the values and resources required for the OpenShift deployment are placed in two dedicated files: [`values-openshift.yaml`](deployment-k8s/values-openshift.yaml) and [`openshift.yaml`](helm-charts-k8s/aiq/templates/openshift.yaml).
-3. Typically, Red Hat teams define secrets for OpenShift using Kubernetes resources. Here we don't want to change the original design by NVIDIA, so we follow the same approach of creating secrets manually using the `oc create secret ...` command. The main goal is to touch the original repository as little as possible, providing OpenShift deployment support with minimal changes.
+1. We introduced an `openshift` flag in the pre-existing [`values.yaml`](helm-charts-k8s/aiq/values.yaml) file. When `openshift.enabled` is `false` (the default), no OpenShift resources are rendered and the chart behaves identically to upstream.
+2. All values and resources required for OpenShift are placed in dedicated files: [`values-openshift.yaml`](deployment-k8s/values-openshift.yaml) and [`openshift.yaml`](helm-charts-k8s/aiq/templates/openshift.yaml).
+3. Secrets (NGC image-pull secret, API credentials) are created declaratively by the chart when the corresponding values are provided via `--set` flags. This keeps the deployment to a single `helm install` command with no manual `oc create secret` steps.
+4. Container-level `securityContext` is made overridable per-app in [`deployment.yaml`](helm-charts-k8s/aiq/templates/deployment.yaml) so OpenShift's SCC can manage it (set to `null` in the overlay).
+5. The main goal is to touch the original repository as little as possible, providing OpenShift deployment support with minimal changes.

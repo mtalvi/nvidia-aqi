@@ -372,28 +372,28 @@ For development, contribution, and documentation, refer to:
 
 ## OpenShift Deployment
 
-AIRA v2.0 has been validated on Red Hat OpenShift. All OpenShift-specific files are isolated in the [`openshift/`](openshift/) directory — no upstream files are modified.
+AIQ v2.0 has been validated on Red Hat OpenShift. OpenShift support is built into the Helm chart behind an `openshift.enabled` flag — no separate scripts or directories required.
 
 ### Two Knowledge Modes
 
-| Mode | GPUs (AIRA) | GPUs (RAG) | Description |
-|------|-------------|------------|-------------|
+| Mode | GPUs (AIQ) | GPUs (RAG) | Description |
+|------|------------|------------|-------------|
 | **LlamaIndex** (default) | 0 | 0 | Self-contained with local ChromaDB. All LLMs cloud-hosted. |
-| **FRAG** | 0 | 6 | Full NVIDIA RAG Blueprint with nv-ingest document processing pipeline. |
+| **FRAG** | 0 | 6+ | Full NVIDIA RAG Blueprint with nv-ingest document processing pipeline. |
 
 ### Quick Start
 
 ```bash
-# LlamaIndex mode (0 GPUs)
-NGC_API_KEY=nvapi-... NVIDIA_API_KEY=nvapi-... AIRA_NAMESPACE=aira \
-  bash openshift/deploy/helm/deploy-openshift.sh
-
-# FRAG mode (6 GPUs for RAG Blueprint)
-NGC_API_KEY=nvapi-... NVIDIA_API_KEY=nvapi-... AIRA_NAMESPACE=aira KNOWLEDGE_MODE=frag \
-  bash openshift/deploy/helm/deploy-openshift.sh
+helm install aiq deploy/helm/deployment-k8s \
+  -f deploy/helm/deployment-k8s/values-openshift.yaml \
+  --set aiq.openshift.ngcSecret.password="$NGC_API_KEY" \
+  --set aiq.openshift.apiKeys.nvidiaApiKey="$NVIDIA_API_KEY" \
+  --set aiq.openshift.apiKeys.tavilyApiKey="$TAVILY_API_KEY" \
+  -n <namespace> --create-namespace \
+  --wait --timeout 10m
 ```
 
-For the full deployment guide, hardware requirements, and troubleshooting, see [`openshift/docs/deploy-openshift.md`](openshift/docs/deploy-openshift.md).
+For the full deployment runbook (prerequisites, FRAG mode, troubleshooting), see [`deploy/helm/openshift.md`](deploy/helm/openshift.md).
 
 ## Roadmap
 
