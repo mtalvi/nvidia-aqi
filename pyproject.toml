@@ -30,7 +30,6 @@ license = {text = "Apache-2.0"}
 dependencies = [
     "nvidia-nat==1.4.0",
     "nvidia-nat-langchain==1.4.0",
-    "nvidia-nat[telemetry]==1.4.0",
     "nvidia-nat-weave==1.4.0",
     "nvidia-nat[async_endpoints]==1.4.0",
     "nvidia-nat-phoenix==1.4.0",
@@ -46,6 +45,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# NAT telemetry extra pulls RAG AI / notebook tooling (e.g. ipykernel, debugpy).
+# Omit from default installs for smaller images and faster PyPI resolution; use
+# `uv sync --extra nat-telemetry` or `pip install aiq-agent[nat-telemetry]` when needed.
+nat-telemetry = [
+    "nvidia-nat[telemetry]==1.4.0",
+]
 dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
