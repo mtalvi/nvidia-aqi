@@ -104,17 +104,21 @@ def main() -> int:
         _terminate_process(scheduler_proc)
         raise SystemExit(str(exc)) from exc
 
-    worker_proc = subprocess.Popen(
-        [
-            "dask-worker",
-            f"tcp://localhost:{scheduler_port}",
-            "--nworkers",
-            str(nworkers),
-            "--nthreads",
-            str(nthreads),
-            "--no-dashboard",
-        ],
-    )
+    worker_cmd = [
+        "dask-worker",
+        f"tcp://localhost:{scheduler_port}",
+        "--nworkers",
+        str(nworkers),
+        "--nthreads",
+        str(nthreads),
+        "--no-dashboard",
+    ]
+    # OpenShell sandboxes run under Landlock, which blocks the POSIX
+    # semaphores that Dask's Nanny process requires.
+    if os.environ.get("OPENSHELL"):
+        worker_cmd.append("--no-nanny")
+
+    worker_proc = subprocess.Popen(worker_cmd)
 
     print("Waiting for worker to connect...", flush=True)
     time.sleep(3)

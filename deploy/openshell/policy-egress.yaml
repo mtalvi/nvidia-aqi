@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Example egress policy for AI-Q default web config (NIM via Build API + Tavily).
+# Copy and edit for your config (e.g. add Serper / internal RAG hosts).
+#
+# Apply after creating the sandbox (from the host):
+#   openshell policy set <sandbox-name> --policy deploy/openshell/policy-egress.example.yaml --wait
+#
+# L4-style rules (host:port + binary). Python is the binary that performs HTTPS
+# for NAT, Dask workers, and httpx.
+
+version: 1
+
+filesystem_policy:
+  include_workdir: true
+  read_only: [/usr, /lib, /proc, /dev/urandom, /app, /etc, /var/log]
+  read_write: [/sandbox, /tmp, /dev/null, /etc/hosts]
+
+landlock:
+  compatibility: best_effort
+
+process:
+  run_as_user: sandbox
+  run_as_group: sandbox
+
+network_policies:
+  aiq_nvidia_api:
+    name: aiq_nvidia_api
+    endpoints:
+      - { host: integrate.api.nvidia.com, port: 443 }
+    binaries:
+      - { path: /app/.venv/bin/python }
+      - { path: /app/.venv/bin/python3.12 }
+      - { path: /usr/bin/python3.12 }
+      - { path: /app/.venv/bin/dask-worker }
+      - { path: /app/.venv/bin/dask-scheduler }
+      - { path: /usr/bin/curl }
+
+  aiq_tavily:
+    name: aiq_tavily
+    endpoints:
+      - { host: api.tavily.com, port: 443 }
+    binaries:
+      - { path: /app/.venv/bin/python }
+      - { path: /app/.venv/bin/python3.12 }
+      - { path: /usr/bin/python3.12 }
+      - { path: /app/.venv/bin/dask-worker }
+      - { path: /app/.venv/bin/dask-scheduler }
+      - { path: /usr/bin/curl }

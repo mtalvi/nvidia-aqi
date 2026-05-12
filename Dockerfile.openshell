@@ -67,8 +67,18 @@ RUN uv pip install --no-deps -e . \
 # aiq_api declares dask, but --no-deps skips it; entrypoint.py needs dask-scheduler / dask-worker on PATH.
 RUN uv pip install "dask[distributed]>=2024.1.0"
 
+# ChromaDB >=1.0 uses a Rust-based SQLite backend that triggers SQLITE_CANTOPEN
+# under Landlock (OpenShell sandbox). Pin to the last pure-Python release.
+RUN uv pip install "chromadb>=0.5.0,<1.0.0"
+
 RUN /app/.venv/bin/python -c "import aiq_api; import knowledge_layer; import distributed; print('✓ Base packages installed')" \
-    && test -x /app/.venv/bin/dask-scheduler && test -x /app/.venv/bin/dask-worker
+    && test -x /app/.venv/bin/dask-scheduler && test -x /app/.venv/bin/dask-worker \
+    && sed -i 's/return aiohttp.ClientSession(connector=connector)/return aiohttp.ClientSession(connector=connector, trust_env=True)/' \
+       /app/.venv/lib/python3.12/site-packages/langchain_nvidia_ai_endpoints/_common.py \
+    && sed -i 's/aiohttp.ClientSession()/aiohttp.ClientSession(trust_env=True)/g' \
+       /app/.venv/lib/python3.12/site-packages/langchain_tavily/_utilities.py \
+    && sed -i 's/aiohttp.ClientSession(timeout=timeout)/aiohttp.ClientSession(timeout=timeout, trust_env=True)/g' \
+       /app/.venv/lib/python3.12/site-packages/langchain_tavily/_utilities.py
 
 RUN chmod +x /app/deploy/start_web.py \
     && mkdir -p /app/data \
@@ -111,6 +121,7 @@ RUN groupadd -g 1000660000 sandbox \
 USER sandbox
 
 ENV PATH="/app/.venv/bin:$PATH"
+ENV OPENSHELL=true
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV HOST=0.0.0.0

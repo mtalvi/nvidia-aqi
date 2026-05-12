@@ -285,12 +285,14 @@ async def run_agent_job(
         async with WorkflowBuilder.from_config(config=config) as builder:
             fn_config = builder.get_function_config(agent_config_name)
 
-            # Get LLMs for deep_researcher (orchestrator required)
-            orchestrator_llm = await builder.get_llm(
-                fn_config.orchestrator_llm, wrapper_type=LLMFrameworkEnum.LANGCHAIN
-            )
+            # Get LLMs: deep_researcher uses orchestrator_llm; shallow_researcher uses llm
+            orchestrator_llm = None
             planner_llm = None
             researcher_llm = None
+            if hasattr(fn_config, "orchestrator_llm") and fn_config.orchestrator_llm:
+                orchestrator_llm = await builder.get_llm(
+                    fn_config.orchestrator_llm, wrapper_type=LLMFrameworkEnum.LANGCHAIN
+                )
             if hasattr(fn_config, "planner_llm") and fn_config.planner_llm:
                 planner_llm = await builder.get_llm(fn_config.planner_llm, wrapper_type=LLMFrameworkEnum.LANGCHAIN)
             if hasattr(fn_config, "researcher_llm") and fn_config.researcher_llm:
@@ -298,7 +300,12 @@ async def run_agent_job(
                     fn_config.researcher_llm, wrapper_type=LLMFrameworkEnum.LANGCHAIN
                 )
 
-            llm = orchestrator_llm
+            if orchestrator_llm:
+                llm = orchestrator_llm
+            elif hasattr(fn_config, "llm") and fn_config.llm:
+                llm = await builder.get_llm(fn_config.llm, wrapper_type=LLMFrameworkEnum.LANGCHAIN)
+            else:
+                raise ValueError(f"Agent config '{agent_config_name}' has no LLM configured")
 
             tools = await builder.get_tools(tool_names=fn_config.tools, wrapper_type=LLMFrameworkEnum.LANGCHAIN)
             if data_sources is not None:
@@ -538,30 +545,30 @@ def _create_agent_instance(
     1. llm_provider + tools pattern (DeepResearcherAgent style)
     2. llm + tools pattern (simpler agents)
     """
-    # Try llm_provider pattern first (DeepResearcherAgent)
-    try:
-        return agent_cls(
-            llm_provider=llm_provider,
-            tools=tools,
-            max_loops=getattr(fn_config, "max_loops", 3),
-            verbose=verbose,
-            callbacks=callbacks,
-        )
-    except TypeError:
-        pass
+    import inspect
 
-    # Try simpler llm + tools pattern
-    try:
-        return agent_cls(
-            llm=llm,
-            tools=tools,
-            callbacks=callbacks,
-        )
-    except TypeError:
-        pass
+    sig = inspect.signature(agent_cls.__init__)
+    params = sig.parameters
 
-    # Fallback: just callbacks
-    return agent_cls(callbacks=callbacks)
+    kwargs: dict = {}
+    if "llm_provider" in params:
+        kwargs["llm_provider"] = llm_provider
+    if "tools" in params:
+        kwargs["tools"] = tools
+    if "max_loops" in params:
+        kwargs["max_loops"] = getattr(fn_config, "max_loops", 3)
+    if "max_llm_turns" in params:
+        kwargs["max_llm_turns"] = getattr(fn_config, "max_llm_turns", 10)
+    if "max_tool_iterations" in params:
+        kwargs["max_tool_iterations"] = getattr(fn_config, "max_tool_iterations", 5)
+    if "verbose" in params:
+        kwargs["verbose"] = verbose
+    if "callbacks" in params:
+        kwargs["callbacks"] = callbacks
+    if "llm" in params and "llm_provider" not in params:
+        kwargs["llm"] = llm
+
+    return agent_cls(**kwargs)
 
 
 async def _run_agent(

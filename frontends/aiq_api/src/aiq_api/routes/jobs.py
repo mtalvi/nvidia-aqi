@@ -489,6 +489,17 @@ async def register_job_routes(app: FastAPI, builder: WorkflowBuilder, worker: Fa
     # table is otherwise created lazily on first EventStore write).
     EventStore._ensure_table_exists(db_url)
 
+    # Ensure NAT's job_info table exists (NAT does not auto-create it).
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    from nat.front_ends.fastapi.job_store import Base as _JobStoreBase
+
+    _job_info_engine = create_async_engine(db_url)
+    async with _job_info_engine.begin() as conn:
+        await conn.run_sync(_JobStoreBase.metadata.create_all)
+    await _job_info_engine.dispose()
+    logger.info("Ensured job_info table in %s", db_url[:50])
+
     # Start the ghost job reaper background task
     asyncio.create_task(_reap_ghost_jobs(job_store, db_url))
 

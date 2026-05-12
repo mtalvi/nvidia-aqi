@@ -607,6 +607,22 @@ class LlamaIndexIngestor(TTLCleanupMixin, BaseIngestor):
                     path=self.persist_dir,
                     settings=Settings(anonymized_telemetry=False),
                 )
+                # OpenShell sandboxes use ChromaDB <1.0 (pure-Python SQLite) to
+                # avoid Landlock/Rust incompatibilities. Older versions may need
+                # explicit tenant/database bootstrap on a fresh DB.
+                if os.environ.get("OPENSHELL"):
+                    try:
+                        admin = self._chroma_client._admin_client
+                        try:
+                            admin.get_tenant("default_tenant")
+                        except Exception:
+                            admin.create_tenant("default_tenant")
+                        try:
+                            admin.get_database("default_database", tenant="default_tenant")
+                        except Exception:
+                            admin.create_database("default_database", tenant="default_tenant")
+                    except Exception as exc:
+                        logger.debug("Tenant/database bootstrap (non-fatal): %s", exc)
             return self._chroma_client
 
     def _update_file_status(
@@ -1653,6 +1669,19 @@ class LlamaIndexRetriever(BaseRetriever):
                 path=self.persist_dir,
                 settings=ChromaSettings(anonymized_telemetry=False),
             )
+            if os.environ.get("OPENSHELL"):
+                try:
+                    admin = self._chroma_client._admin_client
+                    try:
+                        admin.get_tenant("default_tenant")
+                    except Exception:
+                        admin.create_tenant("default_tenant")
+                    try:
+                        admin.get_database("default_database", tenant="default_tenant")
+                    except Exception:
+                        admin.create_database("default_database", tenant="default_tenant")
+                except Exception as exc:
+                    logger.debug("Tenant/database bootstrap (non-fatal): %s", exc)
 
             self._initialized = True
             logger.info("LlamaIndex retriever components initialized")
