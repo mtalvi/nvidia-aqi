@@ -3,9 +3,21 @@
 Deploy the AIQ async research agent inside an NVIDIA OpenShell sandbox with
 policy-enforced egress, Landlock filesystem isolation, and a full UI.
 
-> **Prerequisite:** A working OpenShell gateway. Follow the
-> [OpenShell README](../../OpenShell/README.md) to install the CLI and start a
-> local Docker-backed gateway (`mise run gateway:docker`).
+---
+
+## 0. Prerequisites
+
+Install these **before** starting:
+
+| Requirement | Install |
+|---|---|
+| **Docker** | [docs.docker.com/get-docker](https://docs.docker.com/get-docker/) |
+| **mise** (toolchain manager) | `curl https://mise.run \| sh` — then add to your shell profile |
+| **OpenShell CLI** | See [OpenShell README — Install](https://github.com/NVIDIA/OpenShell#install) |
+| **NVIDIA API key** | [build.nvidia.com](https://build.nvidia.com) — free tier works |
+| **Tavily API key** | [app.tavily.com](https://app.tavily.com) — free tier works |
+| **Git clone of this repo** | `git clone <repo-url> && cd aiq` |
+| **OpenShell source** | Should be at `./OpenShell` inside the repo (submodule or sibling clone) |
 
 ---
 
@@ -77,7 +89,16 @@ AIQ_SUMMARY_DB=sqlite+aiosqlite:////sandbox/data/summaries.db
 
 ```bash
 cd OpenShell
+mise install                     # first time only — installs Rust, Node, etc.
 mise run gateway:docker          # first run compiles Rust — takes ~2 min
+```
+
+Leave this terminal running. In a **new terminal**, confirm the CLI sees the
+gateway:
+
+```bash
+openshell gateway select docker-dev
+openshell status                 # should show the gateway as active
 ```
 
 ### 2.4 Create the sandbox
@@ -98,27 +119,46 @@ Wait for `Uvicorn running on http://0.0.0.0:8000` in the output.
 
 ### 2.5 Pin DNS entries
 
-OpenShell sandboxes use a network namespace that cannot resolve external
-hostnames via Docker's embedded DNS. Pin them manually in the running
-container:
+OpenShell sandboxes use an isolated network namespace that cannot resolve
+external hostnames via Docker's embedded DNS. You must pin the IPs manually
+in the running container.
+
+First, resolve the current IPs (they can change over time):
 
 ```bash
-CONTAINER=$(docker ps --format '{{.Names}}' | head -1)
-docker exec "$CONTAINER" bash -c '
-  echo "99.83.136.103 integrate.api.nvidia.com" >> /etc/hosts
-  echo "3.226.38.126 api.tavily.com" >> /etc/hosts
-'
+dig +short integrate.api.nvidia.com | head -1
+dig +short api.tavily.com | head -1
 ```
 
-> **Tip:** Resolve the IPs fresh with `dig +short integrate.api.nvidia.com`
-> before pinning — they may change over time.
+Then inject them:
+
+```bash
+NVIDIA_IP=$(dig +short integrate.api.nvidia.com | head -1)
+TAVILY_IP=$(dig +short api.tavily.com | head -1)
+CONTAINER=$(docker ps --format '{{.Names}}' | head -1)
+
+docker exec "$CONTAINER" bash -c "
+  echo '$NVIDIA_IP integrate.api.nvidia.com' >> /etc/hosts
+  echo '$TAVILY_IP api.tavily.com' >> /etc/hosts
+"
+```
 
 ### 2.6 Verify
 
 ```bash
+# Health check
 curl http://127.0.0.1:8000/health
-# {"status":"healthy"}
+# → {"status":"healthy"}
+
+# Quick smoke test — submit a shallow research job
+curl -X POST http://127.0.0.1:8000/v1/jobs/async/submit \
+  -H 'Content-Type: application/json' \
+  -d '{"input":"What is NVIDIA NIM?","agent_type":"shallow_researcher"}'
+# → {"job_id":"...","status":"submitted",...}
 ```
+
+If the smoke test returns a job ID, the full pipeline (LLM + Tavily + proxy)
+is working end-to-end.
 
 ### 2.7 (Optional) Start the UI
 
